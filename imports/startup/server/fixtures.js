@@ -1,67 +1,21 @@
 import { Meteor } from 'meteor/meteor';
-import { Lists } from '../../api/lists/lists.js';
-import { Todos } from '../../api/todos/todos.js';
+import { Roles } from 'meteor/alanning:roles';
+import { Accounts } from 'meteor/accounts-base';
 
-// if the database is empty on server start, create some sample data.
-Meteor.startup(() => {
-  if (Lists.find().count() === 0) {
-    const data = [
-      {
-        name: 'Meteor Principles',
-        items: [
-          'Data on the Wire',
-          'One Language',
-          'Database Everywhere',
-          'Latency Compensation',
-          'Full Stack Reactivity',
-          'Embrace the Ecosystem',
-          'Simplicity Equals Productivity',
-        ],
-      },
-      {
-        name: 'Languages',
-        items: [
-          'Lisp',
-          'C',
-          'C++',
-          'Python',
-          'Ruby',
-          'JavaScript',
-          'Scala',
-          'Erlang',
-          '6502 Assembly',
-        ],
-      },
-      {
-        name: 'Favorite Scientists',
-        items: [
-          'Ada Lovelace',
-          'Grace Hopper',
-          'Marie Curie',
-          'Carl Friedrich Gauss',
-          'Nikola Tesla',
-          'Claude Shannon',
-        ],
-      },
-    ];
+const users = [{
+  email: 'ronalstal@gmail.com',
+  password: 'erde2002',
+  profile: {
+    name: { first: 'Ronald', last: 'Stalder' },
+  },
+  roles: ['admin'],
+}];
 
-    let timestamp = (new Date()).getTime();
+users.forEach(({ email, password, profile, roles }) => {
+  const userExists = Meteor.users.findOne({ 'emails.address': email });
 
-    data.forEach((list) => {
-      const listId = Lists.insert({
-        name: list.name,
-        incompleteCount: list.items.length,
-      });
-
-      list.items.forEach((text) => {
-        Todos.insert({
-          listId,
-          text,
-          createdAt: new Date(timestamp),
-        });
-
-        timestamp += 1; // ensure unique timestamp.
-      });
-    });
+  if (!userExists) {
+    const userId = Accounts.createUser({ email, password, profile });
+    Roles.addUsersToRoles(userId, roles);
   }
 });
